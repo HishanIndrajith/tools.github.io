@@ -1,11 +1,154 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <title>Reserved Web Space For Java Codes</title>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-144250591-1"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'UA-144250591-1');
+    </script>
+  <!-- Google Add -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script>
+  <script>
+      (adsbygoogle = window.adsbygoogle || []).push({
+          google_ad_client: "ca-pub-4618457100316307",
+          enable_page_level_ads: true
+      });
+  </script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Simple Text Compare</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Custom styles for this template -->
+  <link href="css/simple-sidebar.css" rel="stylesheet">
+
 </head>
-<body>
-<h1>Reserved Web Space For Java Codes</h1>
-<h6>Owned by Hishan Indrajith © </h6>
+
+<body onload="onLoad()">
+
+	<script>
+        function onLoad() {
+            document.getElementById("outputTrue").style.display = "none";
+            document.getElementById("outputFalse").style.display = "none";
+        }
+        function compare() {
+          var xhttp = new XMLHttpRequest();
+          xhttp.onreadystatechange = function() {
+            if (this.readyState == 4 && this.status == 200) {
+                if(this.responseText ==  'true'){
+                    document.getElementById("outputTrue").style.display = "block";
+                    document.getElementById("outputFalse").style.display = "none";
+                }
+                if(this.responseText ==  'false'){
+                    document.getElementById("outputFalse").style.display = "block";
+                    document.getElementById("outputTrue").style.display = "none";
+                }
+
+            }
+          };
+          // get values
+          var text1 =  document.getElementById("text1").value;
+          var text2 =  document.getElementById("text2").value;
+          xhttp.open("GET", "https://guarded-thicket-65637.herokuapp.com/compare/?text1="+text1+"&text2="+text2, true);
+          xhttp.send();
+        }
+	</script>
+  <div class="d-flex" id="wrapper">
+
+    <!-- Sidebar -->
+    <div class="bg-light border-right" id="sidebar-wrapper">
+      <div class="sidebar-heading">Topics</div>
+      <div class="list-group list-group-flush">
+        <a href="#" class="list-group-item list-group-item-action bg-light">Compare</a>
+        <a href="#" class="list-group-item list-group-item-action bg-light">Tool2</a>
+        <a href="#" class="list-group-item list-group-item-action bg-light">Tool3</a>
+        <a href="#" class="list-group-item list-group-item-action bg-light">Tool4</a>
+        <a href="#" class="list-group-item list-group-item-action bg-light">Tool6</a>
+        <a href="#" class="list-group-item list-group-item-action bg-light">Tool7</a>
+      </div>
+    </div>
+    <!-- /#sidebar-wrapper -->
+
+    <!-- Page Content -->
+    <div id="page-content-wrapper">
+
+      <nav class="navbar navbar-expand-lg navbar-light bg-light border-bottom">
+        <button class="btn btn-primary" id="menu-toggle">Toggle Menu</button>
+
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+          <ul class="navbar-nav ml-auto mt-2 mt-lg-0">
+            <li class="nav-item active">
+              <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                Dropdown
+              </a>
+              <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarDropdown">
+                <a class="dropdown-item" href="#">Action</a>
+                <a class="dropdown-item" href="#">Another action</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Something else here</a>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </nav>
+
+      <div class="container-fluid">
+        <h1 class="mt-4">Compare</h1>
+		<form>
+		<div class="form-group">
+		  <label for="text1">Comment:</label>
+		  <textarea class="form-control" rows="5" id="text1"></textarea>
+		</div>
+		<div class="form-group">
+		  <label for="text2">Comment:</label>
+		  <textarea class="form-control" rows="5" id="text2"></textarea>
+		</div>
+		 <button type="button" class="btn btn-primary btn-block" onclick="compare()">Compare</button>
+		</form>
+		<br>
+          <div id = "outputFalse" class="alert alert-warning">
+              <strong>Not Equal</strong>
+          </div>
+          <div id = "outputTrue" class="alert alert-success">
+              <strong>Equal</strong>
+          </div>
+	  </div>
+	    
+    </div>
+    <!-- /#page-content-wrapper -->
+
+  </div>
+  <!-- /#wrapper -->
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="vendor/jquery/jquery.min.js"></script>
+  <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+  <!-- Menu Toggle Script -->
+  <script>
+    $("#menu-toggle").click(function(e) {
+      e.preventDefault();
+      $("#wrapper").toggleClass("toggled");
+    });
+  </script>
+
 </body>
+
 </html>
