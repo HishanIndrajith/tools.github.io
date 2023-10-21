@@ -47,3 +47,8 @@ body {
     margin-left: -15rem;
   }
 }
+
+.custom-navbar-brand {
+  font-family: 'Pacifico', cursive;
+  font-size: 24px;
+}
