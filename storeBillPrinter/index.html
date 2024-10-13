@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Bill Printer</title>
+    <script src="https://raw.githack.com/eKoopmans/html2pdf/master/dist/html2pdf.bundle.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            width: 40%;
+            margin-right: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 15%;
+        }
+        .form-inline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        @media screen and (max-width: 768px) {
+            .form-inline {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            input[type="text"], input[type="number"], button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total {
+            text-align: right;
+            margin-top: 10px;
+            font-size: 1.2rem;
+        }
+        #bill {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Store Bill Printer</h1>
+
+    <div class="form-inline">
+        <input type="text" id="description" placeholder="Enter item description">
+        <input type="number" id="price" placeholder="Enter price" step="0.01">
+        <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <div id="bill">
+        <h2>Bill</h2>
+        <table id="billTable">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Items will be added here -->
+            </tbody>
+        </table>
+        <div class="total">Total: $<span id="totalAmount">0.00</span></div>
+        <button id="pdfButton" onclick="generatePDF()">Download as PDF</button>
+    </div>
+
+    <script>
+        let total = 0;
+
+        document.getElementById('price').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                addItem();
+            }
+        });
+
+        function addItem() {
+            const description = document.getElementById('description').value;
+            const price = parseFloat(document.getElementById('price').value);
+
+            if (!description || isNaN(price)) {
+                alert("Please enter valid item description and price");
+                return;
+            }
+
+            const tableBody = document.querySelector('#billTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${description}</td>
+                <td>$${price.toFixed(2)}</td>
+            `;
+
+            tableBody.appendChild(row);
+
+            total += price;
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+
+            // Clear input fields
+            document.getElementById('description').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('description').focus();
+        }
+
+        function generatePDF() {
+            const pdfButton = document.getElementById('pdfButton');
+            pdfButton.style.display = 'none'; // Hide the button
+
+            const billElement = document.getElementById('bill');
+            const opt = {
+                margin: 0.5,
+                filename: 'bill.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(billElement).set(opt).save().then(() => {
+                pdfButton.style.display = 'inline'; // Show the button again after saving
+            });
+        }
+    </script>
+
+</body>
+</html>
