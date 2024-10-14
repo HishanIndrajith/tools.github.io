@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Store Bill Printer</title>
     <script src="https://raw.githack.com/eKoopmans/html2pdf/master/dist/html2pdf.bundle.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -72,11 +73,89 @@
             background-color: #fff;
             border: 1px solid #ccc;
         }
+
+        
+        #bill h2 {
+            text-align: center; /* Center the text horizontally */
+            margin: 0;          /* Remove any default margin that could shift it */
+        }
+
+        #businessNamePrint {
+            text-align: center; /* Center the text horizontally */
+            margin: 0;          /* Remove any default margin that could shift it */
+            padding-bottom: 10px;
+        }
+
+        /* Popup Styles */
+        #configPopup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 300px;
+        }
+        .popup-content select, .popup-content input {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .popup-content button {
+            padding: 15px 20px;
+            width: 100%; /* Make the Save button wider */
+            font-size: 1rem;
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        /* Footer Styling */
+        #footer {
+            padding-bottom: 20px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start; /* Aligning button to the left */
+        }
+
+        #reconfigureBtn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            width: auto;
+            height: auto;
+        }
+
+        #reconfigureBtn i {
+            color: #333; /* Default icon color */
+            transition: color 0.3s ease; /* Smooth hover effect */
+        }
+
+        #reconfigureBtn i:hover {
+            color: #444; /* Color change on hover */
+        }
+
+
     </style>
 </head>
 <body>
 
-    <h1>Store Bill Printer</h1>
+    <h1 id="businessNameHeading">Store Bill Printer</h1>
 
     <div class="form-inline">
         <input type="text" id="description" placeholder="Enter item description">
@@ -85,20 +164,40 @@
     </div>
 
     <div id="bill">
-        <h2>Bill</h2>
+        <h1 id="businessNamePrint" style="display: none;"></h1>
+        <h2>Receipt</h2>
         <table id="billTable">
             <thead>
                 <tr>
                     <th>Description</th>
-                    <th>Price</th>
+                    <th>Price (<span id="currencySymbol"></span>)</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Items will be added here -->
             </tbody>
         </table>
-        <div class="total">Total: $<span id="totalAmount">0.00</span></div>
+        <div class="total">Total: <span id="currencySymbol2"></span> <span id="totalAmount">0.00</span></div>
         <button id="pdfButton" onclick="generatePDF()">Download as PDF</button>
+    </div>
+
+    <!-- Footer with Re-Configure Button -->
+    <div id="footer">
+        <button id="reconfigureBtn" onclick="showConfigPopup()">
+            <i class="fa fa-cog fa-4x" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <!-- Configuration Popup -->
+    <div id="configPopup">
+        <div class="popup-content">
+            <h2>Configure Settings</h2>
+            <input type="text" id="businessName" placeholder="Enter Business Name">
+            <select id="currencySelect">
+            <!-- Currencies will be populated dynamically -->
+            </select>
+            <button onclick="saveConfig()">Save</button>
+        </div>
     </div>
 
     <script>
@@ -109,6 +208,80 @@
                 addItem();
             }
         });
+
+        // Check if settings are already stored
+        window.onload = function() {
+
+            loadCurrencies();
+
+            const businessName = localStorage.getItem('businessName');
+            const currency = localStorage.getItem('currency');
+
+            if (businessName && currency) {
+                document.getElementById('businessNameHeading').textContent = businessName;
+                document.getElementById('currencySymbol').textContent = currency;
+                document.getElementById('currencySymbol2').textContent = currency;
+                document.getElementById('businessNamePrint').textContent = businessName;
+            } else {
+                showConfigPopup();
+            }
+        };
+
+        // Fetch currencies from REST Countries API and populate the select dropdown
+        function loadCurrencies() {
+            fetch('https://restcountries.com/v3.1/all')
+                .then(response => response.json())
+                .then(data => {
+                    const currencySelect = document.getElementById('currencySelect');
+                    const currencies = new Set();
+
+                    data.forEach(country => {
+                        if (country.currencies) {
+                            Object.keys(country.currencies).forEach(currencyCode => {
+                                const currencyName = country.currencies[currencyCode].name;
+                                currencies.add({ code: currencyCode, name: currencyName });
+                            });
+                        }
+                    });
+
+                    currencies.forEach(currency => {
+                        const option = document.createElement('option');
+                        option.value = currency.code;
+                        option.textContent = `${currency.name} (${currency.code})`;
+                        currencySelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error fetching currencies:', error));
+        }
+
+        function showConfigPopup() {
+            const popup = document.getElementById('configPopup');
+            popup.style.display = 'flex';
+
+            // Set current values if available
+            const businessName = localStorage.getItem('businessName');
+            const currency = localStorage.getItem('currency');
+            if (businessName) document.getElementById('businessName').value = businessName;
+            if (currency) document.getElementById('currencySelect').value = currency;
+        }
+
+        function saveConfig() {
+            const businessName = document.getElementById('businessName').value;
+            const currency = document.getElementById('currencySelect').value;
+
+            if (businessName && currency) {
+                localStorage.setItem('businessName', businessName);
+                localStorage.setItem('currency', currency);
+
+                document.getElementById('businessNameHeading').textContent = businessName;
+                document.getElementById('currencySymbol').textContent = currency;
+                document.getElementById('currencySymbol2').textContent = currency;
+
+                document.getElementById('configPopup').style.display = 'none';
+            } else {
+                alert("Please provide a business name and currency.");
+            }
+        }
 
         function addItem() {
             const description = document.getElementById('description').value;
@@ -123,7 +296,7 @@
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${description}</td>
-                <td>$${price.toFixed(2)}</td>
+                <td>${document.getElementById('currencySymbol').textContent} ${price.toFixed(2)}</td>
             `;
 
             tableBody.appendChild(row);
@@ -141,6 +314,9 @@
             const pdfButton = document.getElementById('pdfButton');
             pdfButton.style.display = 'none'; // Hide the button
 
+            const businessNamePrint = document.getElementById('businessNamePrint');
+            businessNamePrint.style.display = 'inherit'; // show the title
+
             const billElement = document.getElementById('bill');
             const opt = {
                 margin: 0.5,
@@ -152,6 +328,7 @@
 
             html2pdf().from(billElement).set(opt).save().then(() => {
                 pdfButton.style.display = 'inline'; // Show the button again after saving
+                businessNamePrint.style.display = 'none'; // Hide the title
             });
         }
     </script>
