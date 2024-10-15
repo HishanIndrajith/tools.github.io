@@ -229,7 +229,7 @@
 
         // Fetch currencies from REST Countries API and populate the select dropdown
         function loadCurrencies() {
-            fetch('https://restcountries.com/v3.1/all')
+            fetch('currencies.json') 
                 .then(response => response.json())
                 .then(data => {
                     const currencySelect = document.getElementById('currencySelect');
@@ -251,7 +251,7 @@
                         currencySelect.appendChild(option);
                     });
                 })
-                .catch(error => console.error('Error fetching currencies:', error));
+                .catch(error => console.error('Error loading currencies:', error));
         }
 
         function showConfigPopup() {
