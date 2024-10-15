@@ -12,10 +12,6 @@
             padding: 20px;
             background-color: #f4f4f9;
         }
-        h1 {
-            text-align: center;
-            color: #333;
-        }
         .form-group {
             margin-bottom: 20px;
             width: 100%;
@@ -83,7 +79,7 @@
         #businessNamePrint {
             text-align: center; /* Center the text horizontally */
             margin: 0;          /* Remove any default margin that could shift it */
-            padding-bottom: 10px;
+            padding-bottom: 5px;
         }
 
         /* Popup Styles */
@@ -150,12 +146,63 @@
             color: #444; /* Color change on hover */
         }
 
+        .expandable-panel {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            display: none; /* Initially hidden */
+        }
+        #customerLabel {
+            padding: 10px;
+            padding-bottom: 5px;
+            color: #333;
+            margin:0px;
+        }
+        .customerDetails input {
+            padding: 10px;
+            width: 90%;
+            font-size: 1rem;
+            box-sizing: border-box;
+            border: none;
+            background-color: #f2f2f2;
+        }
+
+        #expand-link {
+            color: blue;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        #businessAddressHeading {
+            text-align: center;
+            font-size: 1rem; /* Smaller font size */
+            margin-top: 5px;
+            margin-bottom: 30px;
+        }
+        #businessNameHeading{
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        #businessAddressPrint {
+            text-align: center;
+            font-size: 1rem; /* Smaller font size */
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+        #receiptLabel {
+            text-align: center;
+            color: #333;
+        }
+
 
     </style>
 </head>
 <body>
 
     <h1 id="businessNameHeading">Store Bill Printer</h1>
+    <p id="businessAddressHeading"></p>
 
     <div class="form-inline">
         <input type="text" id="description" placeholder="Enter item description">
@@ -164,26 +211,40 @@
     </div>
 
     <div id="bill">
-        <h1 id="businessNamePrint" style="display: none;"></h1>
-        <h2>Receipt</h2>
+        <h3 id="businessNamePrint" style="display: none;"></h3>
+        <p id="businessAddressPrint" style="display: none;"></p>
+        <h1 id="receiptLabel" style="display: none;">Receipt</h1>
+
+        <!-- Expandable Link -->
+        <p><span id="expand-link" onclick="togglePanel()">Expand to add customer details</span></p>
+
+        <!-- Expandable Panel with Input Fields -->
+        <div id="expandablePanel" class="expandable-panel">
+            <h4 id="customerLabel">Customer</h4> <!-- Added label "Customer:" -->
+            <div class="customerDetails">
+                <input type="text" id="customerName" placeholder="Click to Enter name">
+                <input type="text" id="customerContact" placeholder="Click to Enter contact details">
+            </div>
+        </div>
+
         <table id="billTable">
             <thead>
                 <tr>
                     <th>Description</th>
-                    <th>Price (<span id="currencySymbol"></span>)</th>
+                    <th>Price (<span class="currencySymbol"></span>)</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Items will be added here -->
             </tbody>
         </table>
-        <div class="total">Total: <span id="currencySymbol2"></span> <span id="totalAmount">0.00</span></div>
-        <button id="pdfButton" onclick="generatePDF()">Download as PDF</button>
+        <div class="total">Total: <span class="currencySymbol"></span> <span id="totalAmount">0.00</span></div>
+        <button id="pdfButton" onclick="generatePDF()">Print Receipt</button>
     </div>
 
     <!-- Footer with Re-Configure Button -->
     <div id="footer">
-        <button id="reconfigureBtn" onclick="showConfigPopup()">
+        <button id="reconfigureBtn" onclick="loadCurrencies()">
             <i class="fa fa-cog fa-4x" aria-hidden="true"></i>
         </button>
     </div>
@@ -193,7 +254,9 @@
         <div class="popup-content">
             <h2>Configure Settings</h2>
             <input type="text" id="businessName" placeholder="Enter Business Name">
+            <input type="text" id="businessAddress" placeholder="Address/ Contact Details">
             <select id="currencySelect">
+
             <!-- Currencies will be populated dynamically -->
             </select>
             <button onclick="saveConfig()">Save</button>
@@ -212,24 +275,26 @@
         // Check if settings are already stored
         window.onload = function() {
 
-            loadCurrencies();
-
             const businessName = localStorage.getItem('businessName');
+            const businessAddress = localStorage.getItem('businessAddress');
             const currency = localStorage.getItem('currency');
 
-            if (businessName && currency) {
+            if (businessName && currency && businessAddress) {
                 document.getElementById('businessNameHeading').textContent = businessName;
-                document.getElementById('currencySymbol').textContent = currency;
-                document.getElementById('currencySymbol2').textContent = currency;
+                document.getElementById('businessAddressHeading').textContent = businessAddress;
+                let elements = document.getElementsByClassName('currencySymbol');
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].textContent = currency;
+                }
                 document.getElementById('businessNamePrint').textContent = businessName;
+                document.getElementById('businessAddressPrint').textContent = businessAddress;
             } else {
-                showConfigPopup();
+                loadCurrencies();
             }
         };
 
-        // Fetch currencies from REST Countries API and populate the select dropdown
         function loadCurrencies() {
-            fetch('currencies.json') 
+            fetch('currencies.json')  // Replace with the correct path to your JSON file
                 .then(response => response.json())
                 .then(data => {
                     const currencySelect = document.getElementById('currencySelect');
@@ -250,9 +315,13 @@
                         option.textContent = `${currency.name} (${currency.code})`;
                         currencySelect.appendChild(option);
                     });
+
+
+                    showConfigPopup();
                 })
                 .catch(error => console.error('Error loading currencies:', error));
         }
+
 
         function showConfigPopup() {
             const popup = document.getElementById('configPopup');
@@ -260,23 +329,31 @@
 
             // Set current values if available
             const businessName = localStorage.getItem('businessName');
+            const businessAddress = localStorage.getItem('businessAddress');
             const currency = localStorage.getItem('currency');
             if (businessName) document.getElementById('businessName').value = businessName;
+            if (businessAddress) document.getElementById('businessAddress').value = businessAddress;
             if (currency) document.getElementById('currencySelect').value = currency;
         }
 
         function saveConfig() {
             const businessName = document.getElementById('businessName').value;
+            const businessAddress = document.getElementById('businessAddress').value;
             const currency = document.getElementById('currencySelect').value;
 
-            if (businessName && currency) {
+            if (businessName && currency && businessAddress) {
                 localStorage.setItem('businessName', businessName);
+                localStorage.setItem('businessAddress', businessAddress);
                 localStorage.setItem('currency', currency);
 
                 document.getElementById('businessNameHeading').textContent = businessName;
-                document.getElementById('currencySymbol').textContent = currency;
-                document.getElementById('currencySymbol2').textContent = currency;
-
+                document.getElementById('businessAddressHeading').textContent = businessAddress;
+                document.getElementById('businessNamePrint').textContent = businessName;
+                document.getElementById('businessAddressPrint').textContent = businessAddress;
+                let elements = document.getElementsByClassName('currencySymbol');
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].textContent = currency;
+                }
                 document.getElementById('configPopup').style.display = 'none';
             } else {
                 alert("Please provide a business name and currency.");
@@ -296,7 +373,7 @@
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${description}</td>
-                <td>${document.getElementById('currencySymbol').textContent} ${price.toFixed(2)}</td>
+                <td><span class="currencySymbol"></span> ${price.toFixed(2)}</td>
             `;
 
             tableBody.appendChild(row);
@@ -314,8 +391,26 @@
             const pdfButton = document.getElementById('pdfButton');
             pdfButton.style.display = 'none'; // Hide the button
 
+            const expandLink = document.getElementById('expand-link');
+            expandLink.style.display = 'none';
+            expandPanel();
+            const customerName = document.getElementById('customerName');
+            hideIfEmpty(customerName);
+            const customerContact = document.getElementById('customerContact');
+            hideIfEmpty(customerContact);
+            const panel = document.getElementById('expandablePanel');
+            if(customerName.value == "" && customerContact.value == ""){
+                panel.style.display = 'none';
+            }
+
             const businessNamePrint = document.getElementById('businessNamePrint');
             businessNamePrint.style.display = 'inherit'; // show the title
+            
+            const businessAddressPrint = document.getElementById('businessAddressPrint');
+            businessAddressPrint.style.display = 'inherit'; // show the title
+
+            const receiptLabel = document.getElementById('receiptLabel');
+            receiptLabel.style.display = 'inherit';
 
             const billElement = document.getElementById('bill');
             const opt = {
@@ -329,8 +424,42 @@
             html2pdf().from(billElement).set(opt).save().then(() => {
                 pdfButton.style.display = 'inline'; // Show the button again after saving
                 businessNamePrint.style.display = 'none'; // Hide the title
+                businessAddressPrint.style.display = 'none';
+                receiptLabel.style.display = 'none';
+                customerName.style.display = 'inline';
+                customerContact.style.display = 'inline';
+                expandLink.style.display = 'inline';
+                panel.style.display = 'block';
             });
         }
+
+        // Function to toggle the expandable panel
+        function togglePanel() {
+            const panel = document.getElementById('expandablePanel');
+            const expandLink = document.getElementById('expand-link');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';  // Show panel
+                expandLink.textContent = "Hide customer details";
+            } else {
+                panel.style.display = 'none';  // Hide panel
+                expandLink.textContent = "Expand to add customer details";
+            }
+        }
+
+        // Function to toggle the expandable panel
+        function expandPanel() {
+            const panel = document.getElementById('expandablePanel');
+            const expandLink = document.getElementById('expand-link');
+            panel.style.display = 'block';  // Show panel
+            expandLink.textContent = "Hide customer details";
+        }
+
+        function hideIfEmpty(dom){
+            if(dom.value == "") {
+                dom.style.display = 'none';
+            }
+        }
+
     </script>
 
 </body>
