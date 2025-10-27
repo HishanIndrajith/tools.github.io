@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Store Bill Printer</title>
+    <script src="https://raw.githack.com/eKoopmans/html2pdf/master/dist/html2pdf.bundle.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background-color: #f4f4f9;
+        }
+        .form-group {
+            margin-bottom: 20px;
+            width: 100%;
+        }
+        input[type="text"], input[type="number"] {
+            padding: 10px;
+            width: 40%;
+            margin-right: 10px;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            cursor: pointer;
+            width: 15%;
+        }
+        .form-inline {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        @media screen and (max-width: 768px) {
+            .form-inline {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            input[type="text"], input[type="number"], button {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .total {
+            text-align: right;
+            margin-top: 10px;
+            font-size: 1.2rem;
+        }
+        #bill {
+            margin-top: 40px;
+            padding: 20px;
+            background-color: #fff;
+            border: 1px solid #ccc;
+        }
+
+        
+        #bill h2 {
+            text-align: center; /* Center the text horizontally */
+            margin: 0;          /* Remove any default margin that could shift it */
+        }
+
+        #businessNamePrint {
+            text-align: center; /* Center the text horizontally */
+            margin: 0;          /* Remove any default margin that could shift it */
+            padding-bottom: 5px;
+        }
+
+        /* Popup Styles */
+        #configPopup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            width: 300px;
+        }
+        .popup-content select, .popup-content input {
+            margin-bottom: 10px;
+            padding: 10px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .popup-content button {
+            padding: 15px 20px;
+            width: 100%; /* Make the Save button wider */
+            font-size: 1rem;
+            background-color: #333;
+            color: white;
+            cursor: pointer;
+            border: none;
+            border-radius: 5px;
+        }
+        /* Footer Styling */
+        #footer {
+            padding-bottom: 20px;
+            text-align: center;
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start; /* Aligning button to the left */
+        }
+
+        #reconfigureBtn {
+            background: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+            width: auto;
+            height: auto;
+        }
+
+        #reconfigureBtn i {
+            color: #333; /* Default icon color */
+            transition: color 0.3s ease; /* Smooth hover effect */
+        }
+
+        #reconfigureBtn i:hover {
+            color: #444; /* Color change on hover */
+        }
+
+        .expandable-panel {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border: 1px solid #ccc;
+            display: none; /* Initially hidden */
+        }
+        #customerLabel {
+            padding: 10px;
+            padding-bottom: 5px;
+            color: #333;
+            margin:0px;
+        }
+        .customerDetails input {
+            padding: 10px;
+            width: 90%;
+            font-size: 1rem;
+            box-sizing: border-box;
+            border: none;
+            background-color: #f2f2f2;
+        }
+
+        #expand-link {
+            color: blue;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        #businessAddressHeading {
+            text-align: center;
+            font-size: 1rem; /* Smaller font size */
+            margin-top: 5px;
+            margin-bottom: 30px;
+        }
+        #businessNameHeading{
+            text-align: center;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        #businessAddressPrint {
+            text-align: center;
+            font-size: 1rem; /* Smaller font size */
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+        #receiptLabel {
+            text-align: center;
+            color: #333;
+        }
+
+
+    </style>
+</head>
+<body>
+
+    <h1 id="businessNameHeading">Store Bill Printer</h1>
+    <p id="businessAddressHeading"></p>
+
+    <div class="form-inline">
+        <input type="text" id="description" placeholder="Enter item description">
+        <input type="number" id="price" placeholder="Enter price" step="0.01">
+        <button onclick="addItem()">Add Item</button>
+    </div>
+
+    <div id="bill">
+        <h3 id="businessNamePrint" style="display: none;"></h3>
+        <p id="businessAddressPrint" style="display: none;"></p>
+        <h1 id="receiptLabel" style="display: none;">Receipt</h1>
+
+        <!-- Expandable Link -->
+        <p><span id="expand-link" onclick="togglePanel()">Expand to add customer details</span></p>
+
+        <!-- Expandable Panel with Input Fields -->
+        <div id="expandablePanel" class="expandable-panel">
+            <h4 id="customerLabel">Customer</h4> <!-- Added label "Customer:" -->
+            <div class="customerDetails">
+                <input type="text" id="customerName" placeholder="Click to Enter name">
+                <input type="text" id="customerContact" placeholder="Click to Enter contact details">
+            </div>
+        </div>
+
+        <table id="billTable">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th>Price (<span class="currencySymbol"></span>)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Items will be added here -->
+            </tbody>
+        </table>
+        <div class="total">Total: <span class="currencySymbol"></span> <span id="totalAmount">0.00</span></div>
+        <button id="pdfButton" onclick="generatePDF()">Print Receipt</button>
+    </div>
+
+    <!-- Footer with Re-Configure Button -->
+    <div id="footer">
+        <button id="reconfigureBtn" onclick="loadCurrencies()">
+            <i class="fa fa-cog fa-4x" aria-hidden="true"></i>
+        </button>
+    </div>
+
+    <!-- Configuration Popup -->
+    <div id="configPopup">
+        <div class="popup-content">
+            <h2>Configure Settings</h2>
+            <input type="text" id="businessName" placeholder="Enter Business Name">
+            <input type="text" id="businessAddress" placeholder="Address/ Contact Details">
+            <select id="currencySelect">
+
+            <!-- Currencies will be populated dynamically -->
+            </select>
+            <button onclick="saveConfig()">Save</button>
+        </div>
+    </div>
+
+    <script>
+        let total = 0;
+
+        document.getElementById('price').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                addItem();
+            }
+        });
+
+        // Check if settings are already stored
+        window.onload = function() {
+
+            const businessName = localStorage.getItem('businessName');
+            const businessAddress = localStorage.getItem('businessAddress');
+            const currency = localStorage.getItem('currency');
+
+            if (businessName && currency && businessAddress) {
+                document.getElementById('businessNameHeading').textContent = businessName;
+                document.getElementById('businessAddressHeading').textContent = businessAddress;
+                let elements = document.getElementsByClassName('currencySymbol');
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].textContent = currency;
+                }
+                document.getElementById('businessNamePrint').textContent = businessName;
+                document.getElementById('businessAddressPrint').textContent = businessAddress;
+            } else {
+                loadCurrencies();
+            }
+        };
+
+        function loadCurrencies() {
+            fetch('currencies.json')  // Replace with the correct path to your JSON file
+                .then(response => response.json())
+                .then(data => {
+                    const currencySelect = document.getElementById('currencySelect');
+                    const currencies = new Set();
+
+                    data.forEach(country => {
+                        if (country.currencies) {
+                            Object.keys(country.currencies).forEach(currencyCode => {
+                                const currencyName = country.currencies[currencyCode].name;
+                                currencies.add({ code: currencyCode, name: currencyName });
+                            });
+                        }
+                    });
+
+                    currencies.forEach(currency => {
+                        const option = document.createElement('option');
+                        option.value = currency.code;
+                        option.textContent = `${currency.name} (${currency.code})`;
+                        currencySelect.appendChild(option);
+                    });
+
+
+                    showConfigPopup();
+                })
+                .catch(error => console.error('Error loading currencies:', error));
+        }
+
+
+        function showConfigPopup() {
+            const popup = document.getElementById('configPopup');
+            popup.style.display = 'flex';
+
+            // Set current values if available
+            const businessName = localStorage.getItem('businessName');
+            const businessAddress = localStorage.getItem('businessAddress');
+            const currency = localStorage.getItem('currency');
+            if (businessName) document.getElementById('businessName').value = businessName;
+            if (businessAddress) document.getElementById('businessAddress').value = businessAddress;
+            if (currency) document.getElementById('currencySelect').value = currency;
+        }
+
+        function saveConfig() {
+            const businessName = document.getElementById('businessName').value;
+            const businessAddress = document.getElementById('businessAddress').value;
+            const currency = document.getElementById('currencySelect').value;
+
+            if (businessName && currency && businessAddress) {
+                localStorage.setItem('businessName', businessName);
+                localStorage.setItem('businessAddress', businessAddress);
+                localStorage.setItem('currency', currency);
+
+                document.getElementById('businessNameHeading').textContent = businessName;
+                document.getElementById('businessAddressHeading').textContent = businessAddress;
+                document.getElementById('businessNamePrint').textContent = businessName;
+                document.getElementById('businessAddressPrint').textContent = businessAddress;
+                let elements = document.getElementsByClassName('currencySymbol');
+                for (let i = 0; i < elements.length; i++) {
+                    elements[i].textContent = currency;
+                }
+                document.getElementById('configPopup').style.display = 'none';
+            } else {
+                alert("Please provide a business name and currency.");
+            }
+        }
+
+        function addItem() {
+            const description = document.getElementById('description').value;
+            const price = parseFloat(document.getElementById('price').value);
+
+            if (!description || isNaN(price)) {
+                alert("Please enter valid item description and price");
+                return;
+            }
+
+            const tableBody = document.querySelector('#billTable tbody');
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${description}</td>
+                <td><span class="currencySymbol"></span> ${price.toFixed(2)}</td>
+            `;
+
+            tableBody.appendChild(row);
+
+            total += price;
+            document.getElementById('totalAmount').textContent = total.toFixed(2);
+
+            // Clear input fields
+            document.getElementById('description').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('description').focus();
+        }
+
+        function generatePDF() {
+            const pdfButton = document.getElementById('pdfButton');
+            pdfButton.style.display = 'none'; // Hide the button
+
+            const expandLink = document.getElementById('expand-link');
+            expandLink.style.display = 'none';
+            expandPanel();
+            const customerName = document.getElementById('customerName');
+            hideIfEmpty(customerName);
+            const customerContact = document.getElementById('customerContact');
+            hideIfEmpty(customerContact);
+            const panel = document.getElementById('expandablePanel');
+            if(customerName.value == "" && customerContact.value == ""){
+                panel.style.display = 'none';
+            }
+
+            const businessNamePrint = document.getElementById('businessNamePrint');
+            businessNamePrint.style.display = 'inherit'; // show the title
+            
+            const businessAddressPrint = document.getElementById('businessAddressPrint');
+            businessAddressPrint.style.display = 'inherit'; // show the title
+
+            const receiptLabel = document.getElementById('receiptLabel');
+            receiptLabel.style.display = 'inherit';
+
+            const billElement = document.getElementById('bill');
+            const opt = {
+                margin: 0.5,
+                filename: 'bill.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+
+            html2pdf().from(billElement).set(opt).save().then(() => {
+                pdfButton.style.display = 'inline'; // Show the button again after saving
+                businessNamePrint.style.display = 'none'; // Hide the title
+                businessAddressPrint.style.display = 'none';
+                receiptLabel.style.display = 'none';
+                customerName.style.display = 'inline';
+                customerContact.style.display = 'inline';
+                expandLink.style.display = 'inline';
+                panel.style.display = 'block';
+            });
+        }
+
+        // Function to toggle the expandable panel
+        function togglePanel() {
+            const panel = document.getElementById('expandablePanel');
+            const expandLink = document.getElementById('expand-link');
+            if (panel.style.display === 'none' || panel.style.display === '') {
+                panel.style.display = 'block';  // Show panel
+                expandLink.textContent = "Hide customer details";
+            } else {
+                panel.style.display = 'none';  // Hide panel
+                expandLink.textContent = "Expand to add customer details";
+            }
+        }
+
+        // Function to toggle the expandable panel
+        function expandPanel() {
+            const panel = document.getElementById('expandablePanel');
+            const expandLink = document.getElementById('expand-link');
+            panel.style.display = 'block';  // Show panel
+            expandLink.textContent = "Hide customer details";
+        }
+
+        function hideIfEmpty(dom){
+            if(dom.value == "") {
+                dom.style.display = 'none';
+            }
+        }
+
+    </script>
+
+</body>
+</html>
