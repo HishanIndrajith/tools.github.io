@@ -1,13 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Store Bill Printer</title>
+    <title>Simple Biller</title>
     <script src="https://raw.githack.com/eKoopmans/html2pdf/master/dist/html2pdf.bundle.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css" integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+        integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
 
     <h1 id="businessNameHeading">Store Bill Printer</h1>
@@ -66,12 +70,23 @@
             <input type="text" id="businessAddress" placeholder="Address/ Contact Details">
             <select id="currencySelect">
 
-            <!-- Currencies will be populated dynamically -->
+                <!-- Currencies will be populated dynamically -->
             </select>
             <button onclick="saveConfig()">Save</button>
         </div>
     </div>
-    <script src="script.js"></script>
+    <!-- Hidden Div for Bill -->
+    <div class="hiddenDiv">
+        <div id="printReceipt">
+        </div>
+    </div>
+
+    <script src="formatters.js"></script>
+    <script src="main.js"></script>
+    <script src="receipt.js"></script>
+    <script src="settings.js"></script>
+    <script src="print.js"></script>
 
 </body>
+
 </html>

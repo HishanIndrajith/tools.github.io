@@ -69,6 +69,10 @@ th {
     font-size: 1.2rem;
 }
 
+.hiddenDiv {
+    display: none;
+}
+
 #bill {
     margin-top: 40px;
     padding: 20px;
@@ -222,4 +226,10 @@ th {
 #receiptLabel {
     text-align: center;
     color: #333;
+}
+
+#printReceipt {
+    width: 80mm;
+    padding: 2mm;
+    font-family: monospace;
 }
